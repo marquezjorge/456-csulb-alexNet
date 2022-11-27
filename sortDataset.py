@@ -30,12 +30,11 @@ def makeDirectories():
     os.mkdir(validateDir + "\\background")
 
 
-camoImages = [img for img in os.listdir(camoDir)]
-nonCamoImages = [img for img in os.listdir(nonCamoDir)]
-backgroundImages = [img for img in os.listdir(backgroundDir)]
-
-
+# 10% valid, 10% test, 80% train
 def moveImages():
+    camoImages = [img for img in os.listdir(camoDir)]
+    nonCamoImages = [img for img in os.listdir(camoDir)]
+    backgroundImages = [img for img in os.listdir(backgroundDir)]
     for i in range(0, 1250):
         # 20% for test
         if i % 5 == 0:
@@ -54,3 +53,22 @@ def moveImages():
             shutil.move(backgroundDir + "\\" + backgroundImages[i], trainDir + "\\background")
 
 
+def reArrangeDataSets():
+    dirs = [validateDir, testDir]
+    l = ['\\background', "\\camo", "\\nonCamo"]
+
+    # move images from validate/test to train, goal is to increase accuracy
+    index = 0
+    for i in range(0, len(dirs)):
+        for j in range(0, len(l)):
+            for img in os.listdir(dirs[i] + l[j]):
+                if index % 2 == 0:
+                    shutil.move(dirs[i] + l[j] + "\\" + img, trainDir + l[j])
+                index += 1
+            print(dirs[i] + l[j], index)
+            index = 0
+
+    # list number of images in each directory
+    for i in range(0, len(dirs)):
+        for j in range(0, len(l)):
+            print(len(os.listdir(dirs[i] + l[j])))

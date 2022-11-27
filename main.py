@@ -92,6 +92,7 @@ augmentedTest = test.map(lambda x, y: (dataAugmentation(x, training=True), y))
 
 rootLogDir = os.path.join(os.curdir, "logs\\fit\\")
 
+
 def getLogRunDir():
     runID = time.strftime("run_%Y_%m_%d-%H_%M_%S")
     return os.path.join(rootLogDir, runID)
@@ -100,6 +101,7 @@ def getLogRunDir():
 logRunDir = getLogRunDir()
 tensorboardCB = keras.callbacks.TensorBoard(logRunDir)
 
+# --------------------
 
 # training the model
 model.fit(augmentedTrain,
@@ -110,3 +112,4 @@ model.fit(augmentedTrain,
 
 # metrics
 metrics = model.evaluate(augmentedTest)
+
