@@ -54,5 +54,3 @@ def moveImages():
             shutil.move(backgroundDir + "\\" + backgroundImages[i], trainDir + "\\background")
 
 
-makeDirectories()
-moveImages()

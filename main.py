@@ -1,8 +1,11 @@
+import os.path
+import time
+
+import tensorflow as tf
 from tensorflow import keras
 from keras import layers as l
 from keras import activations as af
-import os
-import shutil
+from keras import metrics as m
 
 # used for the classification classes
 numClasses = 3
@@ -20,24 +23,21 @@ model.add(l.MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding='valid'))
 model.add(l.BatchNormalization())
 model.add(l.Conv2D(filters=384, kernel_size=(3, 3), strides=(1, 1), activation=af.relu, input_shape=inputShape,
                    padding='same'))
-model.add(l.BatchNormalization())
 model.add(l.Conv2D(filters=384, kernel_size=(3, 3), strides=(1, 1), activation=af.relu, input_shape=inputShape,
                    padding='same'))
 model.add(l.BatchNormalization())
 model.add(l.Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), activation=af.relu, input_shape=inputShape,
                    padding='same'))
 model.add(l.MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding='valid'))
-model.add(l.BatchNormalization())
 model.add(l.Flatten())
 model.add(l.Dense(units=4096, activation=af.relu))
-model.add(l.Dropout(0.5))
 model.add(l.Dense(units=4096, activation=af.relu))
-model.add(l.Dropout(0.5))
 model.add(l.Dense(units=1000, activation=af.relu))
 model.add(l.Dense(units=numClasses, activation=af.softmax))
 model.compile(loss='sparse_categorical_crossentropy',
-              optimizer=keras.optimizers.Adam(learning_rate=0.01),
+              optimizer=keras.optimizers.Adam(learning_rate=0.001),
               metrics=['accuracy'])
+model.summary()
 
 # required variables
 epochs = 50
@@ -49,22 +49,64 @@ trainDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset\\train"
 testDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\dataset\\test"
 validateDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset\\validate"
 
-train = keras.utils.image_dataset_from_directory(trainDir,
+# --------------------
+
+# model instance used for preprocessing images to be used in 'train' dataset
+dataAugmentation = keras.Sequential([l.RandomFlip("horizontal"),
+                                     l.RandomRotation(0.1)])
+
+# --------------------
+
+# loads images into 'train' and creates a semi-processed dataset
+train = tf.keras.utils.image_dataset_from_directory(trainDir,
                                                  labels="inferred",
                                                  label_mode="int",
                                                  color_mode="rgb",
                                                  batch_size=batchSize,
                                                  image_size=(imgHeight, imgWidth))
+# standardizing 'train' data set, completes processing of the dataset
+augmentedTrain = train.map(lambda x, y: (dataAugmentation(x, training=True), y))
 
-validate = keras.utils.image_dataset_from_directory(trainDir,
+# --------------------
+
+# loads images into 'validate' and creates a semi-processed dataset
+validate = tf.keras.utils.image_dataset_from_directory(validateDir,
                                                     labels="inferred",
                                                     label_mode="int",
                                                     color_mode="rgb",
                                                     batch_size=batchSize,
                                                     image_size=(imgHeight, imgWidth))
+# standardizing 'validate' data set, completes processing of the dataset
+augmentedValidation = validate.map(lambda x, y: (dataAugmentation(x, training=True), y))
+
+# --------------------
+test = tf.keras.utils.image_dataset_from_directory(testDir,
+                                                    labels="inferred",
+                                                    label_mode="int",
+                                                    color_mode="rgb",
+                                                    batch_size=batchSize,
+                                                    image_size=(imgHeight, imgWidth))
+augmentedTest = test.map(lambda x, y: (dataAugmentation(x, training=True), y))
+
+# --------------------
+
+rootLogDir = os.path.join(os.curdir, "logs\\fit\\")
+
+def getLogRunDir():
+    runID = time.strftime("run_%Y_%m_%d-%H_%M_%S")
+    return os.path.join(rootLogDir, runID)
+
+
+logRunDir = getLogRunDir()
+tensorboardCB = keras.callbacks.TensorBoard(logRunDir)
+
 
 # training the model
-model.fit(train,
+model.fit(augmentedTrain,
           epochs=epochs,
-          validation_data=validate)
+          validation_data=augmentedValidation)
 
+# --------------------
+
+# metrics
+metrics = model.evaluate(augmentedTest)
