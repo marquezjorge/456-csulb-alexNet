@@ -8,10 +8,6 @@ import matplotlib.pyplot as plt
 import datetime
 
 
-# required variables
-batchSize = 32
-imgHeight = 227
-imgWidth = 227
 dataSet = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset"
 trainDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset\\train"
 testDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\dataset\\test"
@@ -23,7 +19,9 @@ validateDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset\\validate"
 dataAugmentation = keras.Sequential([l.RandomFlip("horizontal"), l.RandomRotation(0.2)])
 
 # --------------------
-
+batchSize = 32
+imgHeight = 227
+imgWidth = 227
 tf.get_logger().setLevel('ERROR')
 # loads images into 'train' and creates a semi-processed dataset
 train = tf.keras.utils.image_dataset_from_directory(trainDir,
