@@ -5,6 +5,7 @@ from tensorflow import keras
 from keras import layers as l
 from keras import activations as af
 import matplotlib.pyplot as plt
+import tensorboard as tb
 import datetime
 
 
@@ -14,12 +15,12 @@ testDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\dataset\\test"
 validateDir = "C:\\Users\\Jorge M\\Documents\\longbeach\\456\\dataset\\validate"
 
 # --------------------
-
 # model instance used for preprocessing images to be used in the datasets
 dataAugmentation = keras.Sequential([l.RandomFlip("horizontal"), l.RandomRotation(0.2)])
 
+
 # --------------------
-batchSize = 32
+batchSize = 30
 imgHeight = 227
 imgWidth = 227
 tf.get_logger().setLevel('ERROR')
@@ -27,10 +28,10 @@ tf.get_logger().setLevel('ERROR')
 train = tf.keras.utils.image_dataset_from_directory(trainDir,
                                                  labels="inferred",
                                                  label_mode="int",
+
                                                  color_mode="rgb",
                                                  batch_size=batchSize,
                                                  image_size=(imgHeight, imgWidth))
-
 
 plt.figure(figsize=(10, 10))
 for imgs, _ in train.take(1):
@@ -43,8 +44,8 @@ plt.show()
 # standardizing 'train' data set, completes processing of the dataset using the dataAugmentation model
 augmentedTrain = train.map(lambda x, y: (dataAugmentation(x, training=True), y))
 
-# --------------------
 
+# --------------------
 # loads images into 'validate' and creates a semi-processed dataset
 validate = tf.keras.utils.image_dataset_from_directory(validateDir,
                                                     labels="inferred",
@@ -55,8 +56,8 @@ validate = tf.keras.utils.image_dataset_from_directory(validateDir,
 # standardizing 'validate' data set, completes processing of the dataset
 augmentedValidation = validate.map(lambda x, y: (dataAugmentation(x, training=True), y))
 
-# --------------------
 
+# --------------------
 test = tf.keras.utils.image_dataset_from_directory(testDir,
                                                     labels="inferred",
                                                     label_mode="int",
@@ -65,8 +66,8 @@ test = tf.keras.utils.image_dataset_from_directory(testDir,
                                                     image_size=(imgHeight, imgWidth))
 augmentedTest = test.map(lambda x, y: (dataAugmentation(x, training=True), y))
 
-# --------------------
 
+# --------------------
 # used for the classification classes
 numClasses = 3
 inputShape = (227, 227, 3)
@@ -99,24 +100,23 @@ model.compile(loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 model.summary()
 
+
 # --------------------
 # Creating a dir to store and visualize logs
 logDir = "logs/fit" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-tensorCallback = tf.keras.callbacks.TensorBoard(log_dir=logDir, histogram_freq=1)
-fileWrite = tf.summary.create_file_writer(logDir + '/cm')
-#callBack = keras.callbacks.LambdaCallback(on_epoch_end=logConfusionMatrix())
+tensorCallback = tf.keras.callbacks.TensorBoard(log_dir=logDir)
 
 
 # --------------------
 # training the model
-epochs = 1
+epochs = 50
 model.fit(augmentedTrain,
           epochs=epochs,
           validation_data=augmentedValidation,
           callbacks=[tensorCallback])
 
-# --------------------
 
+# --------------------
 # metrics
 metrics = model.evaluate(augmentedTest)
 print("Test Accuracy:", metrics[1])
