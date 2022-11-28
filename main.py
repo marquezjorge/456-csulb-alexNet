@@ -102,7 +102,7 @@ model.summary()
 
 
 # --------------------
-# Creating a dir to store and visualize logs
+# Creating a dir to store and visualize logs using tensorboard
 logDir = "logs/fit" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorCallback = tf.keras.callbacks.TensorBoard(log_dir=logDir)
 
@@ -120,19 +120,3 @@ model.fit(augmentedTrain,
 # metrics
 metrics = model.evaluate(augmentedTest)
 print("Test Accuracy:", metrics[1])
-
-
-"""
-rootLogDir = os.path.join(os.curdir, "logs\\fit\\")
-def getLogRunDir():
-    runID = time.strftime("run_%Y_%m_%d-%H_%M_%S")
-    return os.path.join(rootLogDir, runID)
-
-logRunDir = getLogRunDir()
-tensorboardCB = keras.callbacks.TensorBoard(logRunDir)
-
-# --------------------
-
-callBack = cb.Callback()
-
-"""
